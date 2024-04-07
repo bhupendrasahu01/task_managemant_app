@@ -346,26 +346,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
     );
   }
 
-  _appBar() {
-    return AppBar(
-      leading: GestureDetector(
-        onTap: () {
-          Get.back();
-        },
-        child: const Icon(
-          Icons.arrow_back_ios,
-          size: 20,
-        ),
-      ),
-      elevation: 0,
-      actions: const [
-        CircleAvatar(
-          backgroundImage: AssetImage("images/notification_icon.png"),
-          backgroundColor: Colors.white,
-        )
-      ],
-    );
-  }
+
 
   _getDateFromUser() async {
     DateTime? _pickerDate = await showDatePicker(
@@ -406,5 +387,25 @@ class _AddTaskPageState extends State<AddTaskPage> {
         initialTime: TimeOfDay(
             hour: int.parse(_startTime.split(":")[0]),
             minute: int.parse(_startTime.split(":")[1].split(" ")[0])));
+  }
+  _appBar() {
+    return AppBar(
+      leading: GestureDetector(
+        onTap: () {
+          Get.back();
+        },
+        child: const Icon(
+          Icons.arrow_back_ios,
+          size: 20,
+        ),
+      ),
+      elevation: 0,
+      actions: const [
+        CircleAvatar(
+          backgroundImage: AssetImage("images/notification_icon.png"),
+          backgroundColor: Colors.white,
+        )
+      ],
+    );
   }
 }
