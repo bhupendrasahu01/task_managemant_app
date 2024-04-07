@@ -1,5 +1,5 @@
 class TaskModel {
-  int? id;
+  String? id;
   String? title;
   String? note;
   int? isCompleted;
@@ -41,6 +41,7 @@ class TaskModel {
  }
 
 
+
   TaskModel.fromJson(Map<String, dynamic> json) {
    id= json['id'];
    title =json['title'];
@@ -53,4 +54,19 @@ class TaskModel {
    remind= json['remind'];
    repeat= json['repeat'];
  }
+  factory TaskModel.fromMap(Map<String, dynamic> map) {
+    return TaskModel(
+      id: map['id'],
+      title: map['title'],
+      note: map['note'],
+      isCompleted: map['isCompleted'],
+      date: map['date'],
+      startTime: map['startTime'],
+      endTime: map['endTime'],
+      color: map['color'],
+      remind: map['remind'],
+      repeat: map['repeat'],
+    );
+  }
 }
+

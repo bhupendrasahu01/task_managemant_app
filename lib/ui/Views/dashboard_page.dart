@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:date_picker_timeline/date_picker_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -26,14 +27,17 @@ class MyDashboard extends StatefulWidget {
 }
 
 class _MyDashboardState extends State<MyDashboard> {
+  late Stream<QuerySnapshot> _stream;
   DateTime _selectedDate = DateTime.now();
   final _taskController = Get.put(TaskController());
   var notifyHelper;
+  String _pendingTaskCount = "0";
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _stream = FirebaseFirestore.instance.collection("tasks").snapshots();
     setState(() {
       print("home page");
       _taskController.getTask();
@@ -49,14 +53,29 @@ class _MyDashboardState extends State<MyDashboard> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            _appBar(),
+            _appBarFirebase(),
+            //_appBar(),
             SearchTextField(),
             DateTimeView(),
-            _taskController.taskList.isEmpty
-                ? _addTaskView()
-                : _showTasksDashboard(),
+            Container(
+              child: StreamBuilder(
+                  stream: _stream,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      if (snapshot.data!.docs.isEmpty) {
+                        return _addTaskView();
+                      } else {
+                        return _showTasksFirebase();
+                      }
+                    } else {
+                      return _showTasksFirebase();
+                    }
+                  }),
+            ),
+            //_showTasksDashboard(),
             _allTaskView(),
-            _onGoing(),
+            _onGoingFirebase(),
+            // _onGoing(),
           ],
         ),
       ),
@@ -69,14 +88,14 @@ class _MyDashboardState extends State<MyDashboard> {
         await Get.to(AddTaskPage());
         setState(() {
           print("home page");
-          _taskController.getTask();
+          //_taskController.getTask();
         });
       },
       child: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 10),
           width: MediaQuery.of(context).size.width * 0.8,
-          height: MediaQuery.of(context).size.width * 0.5,
+          height: MediaQuery.of(context).size.width * 0.6,
           margin: EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
@@ -111,8 +130,8 @@ class _MyDashboardState extends State<MyDashboard> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Container(
-                          margin: EdgeInsets.only(bottom: 10),
-                          padding: EdgeInsets.only(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.only(
                               right: 10, top: 10, bottom: 10, left: 10),
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(100),
@@ -221,6 +240,115 @@ class _MyDashboardState extends State<MyDashboard> {
     );
   }
 
+  _onGoingFirebase() {
+    return GestureDetector(
+        onTap: () async {
+          await Get.to(HomePage());
+          setState(() {
+            print("home page");
+            _taskController.getTask();
+          });
+        },
+        child: StreamBuilder(
+          stream: _stream,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return SingleChildScrollView(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  height: MediaQuery.of(context).size.width * 0.2,
+                  margin: EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.white,
+                      boxShadow: const [
+                        BoxShadow(
+                          color: grayClr,
+                          blurRadius: 10.0,
+                        ),
+                      ]
+                      // color: _getBGClr(task?.color??0),
+                      ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        margin: EdgeInsets.only(left: 10, right: 20),
+                        child: Row(
+                          children: [
+                            Image.asset(
+                              "images/settings_2.png",
+                              scale: 20,
+                              color: greenClr,
+                            ),
+                            SizedBox(
+                              width: 30,
+                            ),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("Ongoing", style: titleTextStyle),
+                                Text(
+                                    "${snapshot.data!.docs.length.toString()} Tasks",
+                                    style: subDashboardTextStyle)
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward)
+                    ],
+                  ),
+                ),
+              );
+            } else {
+              return Text("No data available");
+            }
+          },
+        ));
+  }
+
+  _appBarFirebase() {
+    return StreamBuilder(
+        stream: _stream,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return Row(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Welcome Jimmy", style: DashboardTextStyle),
+                    Text(
+                        "You have ${snapshot.data!.docs.length.toString()} task due Today",
+                        style: subDashboardTextStyle),
+                  ],
+                ),
+                Expanded(child: Container()),
+                Container(
+                  margin: EdgeInsets.only(right: 20, top: 20, bottom: 20),
+                  padding:
+                      EdgeInsets.only(right: 10, top: 10, bottom: 10, left: 10),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(100),
+                      border:
+                          Border.all(width: 2, color: Colors.grey.shade300)),
+                  child: Icon(
+                    Icons.notifications_none_rounded,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            );
+          } else {
+            return Text("no data available");
+          }
+        });
+  }
+
   _appBar() {
     return Row(
       children: [
@@ -228,8 +356,7 @@ class _MyDashboardState extends State<MyDashboard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("Welcome Jimmy", style: DashboardTextStyle),
-            Text(
-                "You have ${_taskController.taskList.length.toString()} task due Today",
+            Text("You have ${_pendingTaskCount} task due Today",
                 style: subDashboardTextStyle),
           ],
         ),
@@ -287,6 +414,61 @@ class _MyDashboardState extends State<MyDashboard> {
     );
   }
 
+  _showTasksFirebase() {
+    return Expanded(
+      child: StreamBuilder(
+          stream: FirebaseFirestore.instance.collection("tasks").snapshots(),
+          builder: (context, snapshort) {
+            if (snapshort.connectionState == ConnectionState.active) {
+              if (snapshort.hasData) {
+                List<TaskModel> tasks =
+                    snapshort.data!.docs.map((DocumentSnapshot document) {
+                  Map<String, dynamic> data =
+                      document.data() as Map<String, dynamic>;
+                  return TaskModel.fromJson(data);
+                }).toList();
+                return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: snapshort.data!.docs.length,
+                    itemBuilder: (context, index) {
+                      TaskModel taskModel = tasks[index];
+                      return AnimationConfiguration.staggeredList(
+                        position: index,
+                        child: SlideAnimation(
+                          child: FadeInAnimation(
+                            child: Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    //_showBottomSheet(context, taskModel);
+                                    print("Taped");
+                                  },
+                                  child: MyDashboardTaskList(taskModel),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    });
+              } else if (snapshort.hasError) {
+                return Center(
+                  child: Text("${snapshort.hasError.toString()}"),
+                );
+              } else {
+                return Center(
+                  child: Text("${snapshort.hasError.toString()}"),
+                );
+              }
+            } else {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+          }),
+    );
+  }
+
   _showBottomSheet(BuildContext context, TaskModel taskModel) {
     Get.bottomSheet(
       Container(
@@ -309,7 +491,7 @@ class _MyDashboardState extends State<MyDashboard> {
                 : _bottomSheetButton(
                     lable: "Task Completed",
                     onTap: () {
-                      _taskController.markTaskCompleted(taskModel.id!);
+                      //    _taskController.markTaskCompleted(taskModel.id!);
                       Get.back();
                     },
                     clr: primaryClr,

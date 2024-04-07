@@ -1,12 +1,19 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:random_string/random_string.dart';
 import 'package:task_managemant_app/controllers/task_controller.dart';
 import 'package:task_managemant_app/models/task.dart';
 import 'package:task_managemant_app/ui/theme.dart';
 import 'package:task_managemant_app/ui/widgets/button.dart';
 import 'package:task_managemant_app/ui/widgets/input_field.dart';
-
+import 'package:uuid/data.dart';
+import 'package:uuid/uuid.dart';
+import 'package:uuid/rng.dart';
+import '../controllers/task_firebase_controller.dart';
 import 'home_page.dart';
 
 class AddTaskPage extends StatefulWidget {
@@ -17,7 +24,9 @@ class AddTaskPage extends StatefulWidget {
 }
 
 class _AddTaskPageState extends State<AddTaskPage> {
+
   final TaskController _taskController = Get.put(TaskController());
+  final TaskFirebaseController _taskControllerFirebase = Get.put(TaskFirebaseController());
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
@@ -26,8 +35,24 @@ class _AddTaskPageState extends State<AddTaskPage> {
   int _selectedRemind = 5;
   List<int> remindList = [5, 10, 15, 20];
   String _selectedRepeat = "Project";
-  List<String> repeatList = ["Project","Meeting", "Management","Product","Dribbble", "Behance", ];
+  List<String> repeatList = [
+    "Project",
+    "Meeting",
+    "Management",
+    "Product",
+    "Dribbble",
+    "Behance",
+  ];
   int _selectedColor = 0;
+
+  Future<void> initializeDefaultFromAndroidResource() async {
+    if (defaultTargetPlatform != TargetPlatform.android || kIsWeb) {
+      print('Not running on Android, skipping');
+      return;
+    }
+    FirebaseApp app = await Firebase.initializeApp();
+    print('Initialized default app $app from Android resource');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +253,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
   _validateDate() async {
     if (_titleController.text.isNotEmpty && _noteController.text.isNotEmpty) {
       //add to database
-      _addTaskToDB();
+      await _addTaskToDB();
       await Get.to(HomePage());
       // Get.back();
     } else if (_titleController.text.isEmpty || _noteController.text.isEmpty) {
@@ -246,18 +271,33 @@ class _AddTaskPageState extends State<AddTaskPage> {
   }
 
   _addTaskToDB() async {
-    int value = await _taskController.addTask(
-        taskModel: TaskModel(
-            note: _noteController.text,
-            title: _titleController.text,
-            date: DateFormat.yMd().format(_selectedDate),
-            startTime: _startTime,
-            endTime: _endTime,
-            remind: _selectedRemind,
-            repeat: _selectedRepeat,
-            color: _selectedColor,
-            isCompleted: 0));
-    print("My ID is $value");
+    String Id= randomAlphaNumeric(10);
+    Map<String, dynamic> addTasks = {
+      "id": Id,
+      "note": _noteController.text,
+      "title": _titleController.text,
+      "date": DateFormat.yMd().format(_selectedDate),
+      "startTime": _startTime,
+      "endTime": _endTime,
+      "remind": _selectedRemind,
+      "repeat": _selectedRepeat,
+      "color": _selectedColor,
+      "isCompleted": 0
+    };
+    _taskControllerFirebase.addTaskFirebase(addTasks,Id);
+//sql database
+    // int value = await _taskController.addTask(
+    //     taskModel: TaskModel(
+    //         note: _noteController.text,
+    //         title: _titleController.text,
+    //         date: DateFormat.yMd().format(_selectedDate),
+    //         startTime: _startTime,
+    //         endTime: _endTime,
+    //         remind: _selectedRemind,
+    //         repeat: _selectedRepeat,
+    //         color: _selectedColor,
+    //         isCompleted: 0));
+    // print("My ID is $value");
   }
 
   _colorPallet() {
