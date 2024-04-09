@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 
 class SearchTextField extends StatelessWidget {
-  const SearchTextField({super.key});
+  final Function(String)? onChange;
+  const SearchTextField({super.key, this.onChange});
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +22,7 @@ class SearchTextField extends StatelessWidget {
                   ),
                 ]),
                 child: TextFormField(
+                  onChanged: onChange,
                   decoration: InputDecoration(
                       prefixIcon: Icon(
                         Icons.search,

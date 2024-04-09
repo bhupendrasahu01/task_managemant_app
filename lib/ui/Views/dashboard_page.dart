@@ -8,6 +8,7 @@ import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:task_managemant_app/ui/home_page.dart';
+import 'package:task_managemant_app/ui/widgets/see_all_task_view.dart';
 
 import '../../controllers/task_controller.dart';
 import '../../models/task.dart';
@@ -167,9 +168,14 @@ class _MyDashboardState extends State<MyDashboard> {
               "All Task",
               style: todayTextStyle,
             ),
-            Text(
-              "See All",
-              style: seeAllTextStyle,
+            GestureDetector(
+              onTap: () async {
+                await Get.to(SeeAllTasks());
+              },
+              child: Text(
+                "See All",
+                style: seeAllTextStyle,
+              ),
             ),
           ],
         ),

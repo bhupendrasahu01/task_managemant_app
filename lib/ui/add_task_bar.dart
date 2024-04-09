@@ -254,7 +254,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
     if (_titleController.text.isNotEmpty && _noteController.text.isNotEmpty) {
       //add to database
       await _addTaskToDB();
-      await Get.to(HomePage());
+      await Get.off(HomePage());
       // Get.back();
     } else if (_titleController.text.isEmpty || _noteController.text.isEmpty) {
       Get.snackbar(

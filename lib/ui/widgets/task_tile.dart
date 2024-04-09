@@ -6,13 +6,13 @@ import '../theme.dart';
 
 class TaskTile extends StatelessWidget {
   final TaskModel? task;
+
   TaskTile(this.task);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding:
-      EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: 20),
       width: MediaQuery.of(context).size.width,
       margin: EdgeInsets.only(bottom: 12),
       child: Container(
@@ -20,7 +20,7 @@ class TaskTile extends StatelessWidget {
         //  width: SizeConfig.screenWidth * 0.78,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: _getBGClr(task?.color??0),
+          color: _getBGClr(task?.color ?? 0),
         ),
         child: Row(children: [
           Expanded(
@@ -28,7 +28,7 @@ class TaskTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  task?.title??"",
+                  task?.title ?? "",
                   style: GoogleFonts.lato(
                     textStyle: TextStyle(
                         fontSize: 16,
@@ -52,14 +52,20 @@ class TaskTile extends StatelessWidget {
                       "${task!.startTime} - ${task!.endTime}",
                       style: GoogleFonts.lato(
                         textStyle:
-                        TextStyle(fontSize: 13, color: Colors.grey[100]),
+                            TextStyle(fontSize: 13, color: Colors.grey[100]),
                       ),
                     ),
                   ],
                 ),
+                Text(
+                  "${task!.date}",
+                  style: GoogleFonts.lato(
+                    textStyle: TextStyle(fontSize: 13, color: Colors.grey[100]),
+                  ),
+                ),
                 SizedBox(height: 12),
                 Text(
-                  task?.note??"",
+                  task?.note ?? "",
                   style: GoogleFonts.lato(
                     textStyle: TextStyle(fontSize: 15, color: Colors.grey[100]),
                   ),

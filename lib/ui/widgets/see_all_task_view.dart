@@ -1,32 +1,29 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:date_picker_timeline/date_picker_widget.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:task_managemant_app/controllers/task_controller.dart';
-import 'package:task_managemant_app/models/task.dart';
-import 'package:task_managemant_app/ui/add_task_bar.dart';
-import 'package:task_managemant_app/ui/theme.dart';
-
+import 'package:task_managemant_app/ui/widgets/search_text_field.dart';
 import 'package:task_managemant_app/ui/widgets/task_tile.dart';
 
-import '../controllers/task_firebase_controller.dart';
+import '../../controllers/task_controller.dart';
+import '../../controllers/task_firebase_controller.dart';
+import '../../models/task.dart';
+import '../add_task_bar.dart';
+import '../theme.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
+class SeeAllTasks extends StatefulWidget {
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<SeeAllTasks> createState() => _SeeAllTasksState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _SeeAllTasksState extends State<SeeAllTasks> {
   late Stream<QuerySnapshot> _stream;
-
   DateTime _selectedDate = DateTime.now();
-  final _taskController = Get.put(TaskController());
+  final _taskFirebaseController = Get.put(TaskFirebaseController());
   var notifyHelper;
 
   @override
@@ -50,104 +47,19 @@ class _HomePageState extends State<HomePage> {
         padding: EdgeInsets.only(top: 65),
         child: Column(
           children: [
-            //_appBarHome(),
             _appBarHomeFirebase(),
             _addTaskBar(),
-            _addDateBar(),
             const SizedBox(
               height: 10,
             ),
-            // _showTasks(),
-           // _showTasks(),
-            _showTasksFirebase()
+            Container(
+                margin: EdgeInsets.only(left: 20, right: 20),
+                child: SearchTextField(onChange: _taskFirebaseController.onSearchTextChanged,)),
+            _showFilterTask()
+           // _showTasksFirebase()
           ],
         ),
       ),
-    );
-
-  }
-  _addDateBar() {
-    return Container(
-      margin: const EdgeInsets.only(top: 20, left: 20),
-      child: DatePicker(
-        DateTime.now(),
-        height: 100,
-        width: 80,
-        initialSelectedDate: DateTime.now(),
-        selectionColor: greenClr,
-        selectedTextColor: Colors.white,
-        dateTextStyle: GoogleFonts.lato(
-          textStyle: const TextStyle(
-              fontSize: 20, fontWeight: FontWeight.w600, color: Colors.grey),
-        ),
-        dayTextStyle: GoogleFonts.lato(
-          textStyle: const TextStyle(
-              fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey),
-        ),
-        monthTextStyle: GoogleFonts.lato(
-          textStyle: const TextStyle(
-              fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey),
-        ),
-        onDateChange: (date) {
-          setState(() {
-            _selectedDate = date;
-          });
-        },
-      ),
-    );
-  }
-  _appBarHome() {
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: () {
-            Get.back();
-            _taskController.getTask();
-          },
-          child: Container(
-            margin: EdgeInsets.only(right: 20, top: 20, bottom: 20, left: 20),
-            padding: EdgeInsets.only(right: 10, top: 10, bottom: 10, left: 10),
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-                border: Border.all(width: 2, color: Colors.grey.shade300)),
-            child: Icon(
-              Icons.arrow_back_ios_rounded,
-              // color: Colors.green,
-            ),
-          ),
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              DateFormat.yMMMd().format(DateTime.now()),
-              style: DashboardTextStyle,
-            ),
-            //  Text("Welcome Jimmy", style: DashboardTextStyle),
-            Text(
-                "You have ${_taskController.taskList.length.toString()} task due Today",
-                style: subDashboardTextStyle),
-          ],
-        ),
-        Expanded(child: Container()),
-        GestureDetector(
-          onTap: () async {
-            await Get.to(AddTaskPage());
-            _taskController.getTask();
-          },
-          child: Container(
-            margin: EdgeInsets.only(right: 20, top: 20, bottom: 20),
-            padding: EdgeInsets.only(right: 10, top: 10, bottom: 10, left: 10),
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-                border: Border.all(width: 2, color: Colors.grey.shade300)),
-            child: Icon(
-              Icons.add,
-              color: greenClr,
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -157,15 +69,16 @@ class _HomePageState extends State<HomePage> {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               GestureDetector(
                 onTap: () {
                   Get.back();
-                //  _taskController.getTask();
+                  //  _taskController.getTask();
                 },
                 child: Container(
                   margin:
-                      EdgeInsets.only(right: 20, top: 20, bottom: 20, left: 20),
+                      EdgeInsets.only(right: 0, top: 20, bottom: 20, left: 20),
                   padding:
                       EdgeInsets.only(right: 10, top: 10, bottom: 10, left: 10),
                   decoration: BoxDecoration(
@@ -178,20 +91,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    DateFormat.yMMMd().format(DateTime.now()),
-                    style: DashboardTextStyle,
-                  ),
-                  //  Text("Welcome Jimmy", style: DashboardTextStyle),
-                  Text(
-                      "You have ${snapshot.data!.docs.length.toString()} task due Today",
-                      style: subDashboardTextStyle),
-                ],
-              ),
-              Expanded(child: Container()),
+              Text("All Tasks", style: DashboardTextStyle),
               GestureDetector(
                 onTap: () async {
                   await Get.to(AddTaskPage());
@@ -219,18 +119,21 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+_showFilterTask(){
 
-  _showTasks() {
-    return Expanded(
-      child: Obx(() {
-        print("Thia ia list ${DateFormat.yMd().format(_selectedDate)}");
+    return Expanded(child: Obx((){
+      if(_taskFirebaseController.tasks.isEmpty){
+        return Center(child: Text("No Task"),);
+      }else{
         return ListView.builder(
-            itemCount: _taskController.taskList.length,
-            itemBuilder: (_, index) {
-              TaskModel taskModel = _taskController.taskList[index];
-              print("Thia ia list $_taskController.taskList.length");
+            itemCount: _taskFirebaseController.filteredTasks.length,
+            itemBuilder: (context, index) {
+              final tasks= _taskFirebaseController.filteredTasks[index];
+              //TaskModel taskModel = tasks[index];
+            //  print("This ixs task date${taskModel.date}");
+              print(
+                  "Thia ia lisddddddddddddddt ${DateFormat.yMd().format(_selectedDate)}");
 
-              if (taskModel.repeat == 'Project') {
                 return AnimationConfiguration.staggeredList(
                   position: index,
                   child: SlideAnimation(
@@ -239,43 +142,22 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           GestureDetector(
                             onTap: () {
-                              _showBottomSheet(context, taskModel);
+                              _showBottomSheet(context, tasks);
+
                               print("Taped");
                             },
-                            child: TaskTile(taskModel),
+                            child: TaskTile(tasks),
                           )
                         ],
                       ),
                     ),
                   ),
                 );
-              }
-              if (taskModel.date == DateFormat.yMd().format(_selectedDate)) {
-                return AnimationConfiguration.staggeredList(
-                  position: index,
-                  child: SlideAnimation(
-                    child: FadeInAnimation(
-                      child: Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              _showBottomSheet(context, taskModel);
-                              print("Taped");
-                            },
-                            child: TaskTile(taskModel),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              } else {
-                return Container();
-              }
+
             });
-      }),
-    );
-  }
+      }
+    }));
+}
 
   _showTasksFirebase() {
     return Expanded(
@@ -299,29 +181,24 @@ class _HomePageState extends State<HomePage> {
                       print(
                           "Thia ia lisddddddddddddddt ${DateFormat.yMd().format(_selectedDate)}");
                       if (snapshort.hasData) {
-                        if (taskModel.date ==
-                            DateFormat.yMd().format(_selectedDate)) {
-                          return AnimationConfiguration.staggeredList(
-                            position: index,
-                            child: SlideAnimation(
-                              child: FadeInAnimation(
-                                child: Row(
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () {
-                                        _showBottomSheet(context, taskModel);
-                                        print("Taped");
-                                      },
-                                      child: TaskTile(taskModel),
-                                    )
-                                  ],
-                                ),
+                        return AnimationConfiguration.staggeredList(
+                          position: index,
+                          child: SlideAnimation(
+                            child: FadeInAnimation(
+                              child: Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      _showBottomSheet(context, taskModel);
+                                      print("Taped");
+                                    },
+                                    child: TaskTile(taskModel),
+                                  )
+                                ],
                               ),
                             ),
-                          );
-                        } else {
-                          return Container();
-                        }
+                          ),
+                        );
                       }
                     });
               } else if (snapshort.hasError) {
@@ -341,6 +218,7 @@ class _HomePageState extends State<HomePage> {
           }),
     );
   }
+
   _addTaskBar() {
     return Container(
       margin: const EdgeInsets.only(left: 20, right: 20, top: 10),
@@ -370,21 +248,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-    );
-  }
-
-  _appBar() {
-    return AppBar(
-      elevation: 0,
-      actions: [
-        Container(
-          margin: EdgeInsets.only(right: 20),
-          child: const CircleAvatar(
-            backgroundImage: AssetImage("images/notification_icon.png"),
-            backgroundColor: Colors.white,
-          ),
-        )
-      ],
     );
   }
 }
@@ -480,7 +343,3 @@ _bottomSheetButton(
     ),
   );
 }
-
-
-
-
